@@ -32,7 +32,7 @@ public class ChunkManager : MonoBehaviour {
 		Vector2 v1 = new Vector2(Player.position.x, Player.position.z);
 		foreach(Renderer r in GetComponentsInChildren<Renderer>()) {
 			Vector2 v2 = new Vector2(r.bounds.center.x, r.bounds.center.z);
-			if (Vector2.Distance(v1, v2) > ChunkSize.x*4) {
+			if (Vector2.Distance(v1, v2) > ChunkSize.x*5) {
 				r.enabled = false;
 			} else {
 				r.enabled = true;

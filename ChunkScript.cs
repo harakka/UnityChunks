@@ -18,6 +18,8 @@ public class ChunkScript : MonoBehaviour {
 	List<Vector3> NewVertices = new List<Vector3>();
     List<Vector2> NewUv = new List<Vector2>();
     List<int> NewTriangles = new List<int>();
+
+	List<Color32> Colors = new List<Color32>();
 	
 	Mesh mesh;
 	float tUnit = 0.125f;
@@ -28,10 +30,23 @@ public class ChunkScript : MonoBehaviour {
 	byte[,,] blocks;
 
 	public byte BlockAt(int x, int y, int z) {
-		if (x < 0 || x >= Size.x || y < 0 || y >= Size.y || z < 0 || z >= Size.z)
+		if (x < 0 || x >= Size.x || y < 0 || y >= Size.y || z < 0 || z >= Size.z) {
+			Debug.Log("DEBUG: nonexistent block access: " + x + "x, " + y + "y, " + z + "z @ " + Position);
 			return 0;
-		else
+		} else {
 			return blocks[x,y,z];
+		}
+	}
+
+	bool[,,] SurroundingBlockSolidity(int x, int y, int z) {
+		bool[,,] solids = new bool[3,3,3];
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				for (int k = 0; k < 3; k++) {
+					solids[i][j][k] = (BlockAt[x+i-1, y+j-1, z+k-1] == 0);
+				}
+			}
+		}
 	}
 
 	public void Init(Vector3 size, Vector2 position) {
@@ -67,7 +82,18 @@ public class ChunkScript : MonoBehaviour {
 
 	void UpdateMesh () {
 		mesh.Clear ();
+
+		/*int i = 0;
+		while (i < NewVertices.Count) {
+			colors[i] = Color32.Lerp(Color.black, Color.white, NewVertices[i].y/Size.y);
+			i++;
+		}
+		Debug.Log(i + " vertices colored");*/
+
 		mesh.vertices = NewVertices.ToArray();
+
+		mesh.colors32 = Colors.ToArray();
+
 		mesh.triangles = NewTriangles.ToArray();
 		mesh.uv = NewUv.ToArray();
 		mesh.Optimize ();
@@ -80,6 +106,20 @@ public class ChunkScript : MonoBehaviour {
 		NewVertices.Clear();
 		NewTriangles.Clear();
 		NewUv.Clear();
+		Colors.Clear();
+
+		// TODO: move this to right place
+		//Color32[] colors = new Color32[NewVertices.Count];
+	}
+
+	// AO method from http://0fps.net/2013/07/03/ambient-occlusion-for-minecraft-like-worlds/
+	// TODO: handle chunk borders
+	void VertexAO(int side1, int side2, int corner) {
+		int s1, s2, c;
+		s1 = (side1 != 0) ? 1: 0;
+		s2 = (side2 != 0) ? 1: 0;
+		c = (corner != 0) ? 1: 0;
+		Colors.Add(Color32.Lerp(Color.black, Color.white, (3-(s1+s2+c))/3));
 	}
 
 	void GenFaceCommon(Vector2 tex) {
@@ -110,6 +150,12 @@ public class ChunkScript : MonoBehaviour {
 		} else {
 			GenFaceCommon(tMud);
 		}
+
+		// Tsekkaa 8.6. muistiinpanot
+		// TODO: näihin BlockAt()
+		// Corner vertices of the top face in order 0,1,2,3
+		VertexAO (BlockAt(pos.x-1, pos.y, pos.z-1), BlockAt(pos.x,pos.y,pos.z), BlockAt (pos.x-1, pos.y, pos.z));
+		VertexAO (BlockAt(pos.x-1, pos.y, pos.z-1), BlockAt(pos.x,pos.y,pos.z), BlockAt (pos.x-1, pos.y, pos.z));
 	}
 
 	void GenFaceLeft(Vector3 pos) {
