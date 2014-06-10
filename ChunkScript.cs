@@ -29,23 +29,195 @@ public class ChunkScript : MonoBehaviour {
 	MeshCollider col;
 	byte[,,] blocks;
 
-	public byte BlockAt(int x, int y, int z) {
+	enum Neighbor {
+		FrontNW, FrontN, FrontNE, FrontE, FrontSE, FrontS, FrontSW, FrontW, FrontCenter,
+		MidNW, MidN, MidNE, MidE, MidSE, MidS, MidSW, MidW, MidCenter,
+		BackNW, BackN, BackNE, BackE, BackSE, BackS, BackSW, BackW, BackCenter
+	}
+
+	bool IsNeighborSolid(int x, int y, int z, Neighbor n) {
+		if (NeighborBlockType(x, y, z, n) == 0) return false;
+		else return true;
+	}
+
+	byte NeighborBlockType(int x, int y, int z, Neighbor n) {
+		int xOff = 0, yOff = 0, zOff = 0;
+		switch (n) {
+		case Neighbor.FrontNW:
+			xOff = -1;
+			yOff = 1;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontN:
+			xOff = 0;
+			yOff = 1;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontNE:
+			xOff = 1;
+			yOff = 1;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontE:
+			xOff = 1;
+			yOff = 0;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontSE:
+			xOff = 1;
+			yOff = -1;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontS:
+			xOff = 0;
+			yOff = -1;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontSW:
+			xOff = -1;
+			yOff = -1;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontW:
+			xOff = -1;
+			yOff = 0;
+			zOff = -1;
+			break;
+
+		case Neighbor.FrontCenter:
+			xOff = 0;
+			yOff = 0;
+			zOff = -1;
+			break;
+
+		case Neighbor.MidNW:
+			xOff = -1;
+			yOff = 1;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidN:
+			xOff = 0;
+			yOff = 1;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidNE:
+			xOff = 1;
+			yOff = 1;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidE:
+			xOff = 1;
+			yOff = 0;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidSE:
+			xOff = 1;
+			yOff = -1;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidS:
+			xOff = 0;
+			yOff = -1;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidSW:
+			xOff = -1;
+			yOff = -1;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidW:
+			xOff = -1;
+			yOff = 0;
+			zOff = 0;
+			break;
+
+		case Neighbor.MidCenter:
+			xOff = 0;
+			yOff = 0;
+			zOff = 0;
+			break;
+
+		case Neighbor.BackNW:
+			xOff = -1;
+			yOff = 1;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackN:
+			xOff = 0;
+			yOff = 1;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackNE:
+			xOff = 1;
+			yOff = 1;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackE:
+			xOff = 1;
+			yOff = 0;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackSE:
+			xOff = 1;
+			yOff = -1;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackS:
+			xOff = 0;
+			yOff = -1;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackSW:
+			xOff = -1;
+			yOff = -1;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackW:
+			xOff = -1;
+			yOff = 0;
+			zOff = 1;
+			break;
+
+		case Neighbor.BackCenter:
+			xOff = 0;
+			yOff = 0;
+			zOff = 1;
+			break;
+		default:
+			Debug.Log("The famous this should never happen line");
+			break;
+		}
+
+		return BlockAt(x+xOff, y+yOff, z+zOff);
+	}
+
+	byte BlockAt(int x, int y, int z) {
 		if (x < 0 || x >= Size.x || y < 0 || y >= Size.y || z < 0 || z >= Size.z) {
-			Debug.Log("DEBUG: nonexistent block access: " + x + "x, " + y + "y, " + z + "z @ " + Position);
+			//Debug.Log("DEBUG: nonexistent block access: " + x + "x, " + y + "y, " + z + "z @ " + Position);
 			return 0;
 		} else {
 			return blocks[x,y,z];
-		}
-	}
-
-	bool[,,] SurroundingBlockSolidity(int x, int y, int z) {
-		bool[,,] solids = new bool[3,3,3];
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				for (int k = 0; k < 3; k++) {
-					solids[i][j][k] = (BlockAt[x+i-1, y+j-1, z+k-1] == 0);
-				}
-			}
 		}
 	}
 
@@ -92,10 +264,10 @@ public class ChunkScript : MonoBehaviour {
 
 		mesh.vertices = NewVertices.ToArray();
 
-		mesh.colors32 = Colors.ToArray();
-
 		mesh.triangles = NewTriangles.ToArray();
 		mesh.uv = NewUv.ToArray();
+		mesh.colors32 = Colors.ToArray();
+
 		mesh.Optimize ();
 		mesh.RecalculateNormals ();
 		mesh.RecalculateBounds();
@@ -114,11 +286,11 @@ public class ChunkScript : MonoBehaviour {
 
 	// AO method from http://0fps.net/2013/07/03/ambient-occlusion-for-minecraft-like-worlds/
 	// TODO: handle chunk borders
-	void VertexAO(int side1, int side2, int corner) {
+	void VertexAO(bool side1, bool side2, bool corner) {
 		int s1, s2, c;
-		s1 = (side1 != 0) ? 1: 0;
-		s2 = (side2 != 0) ? 1: 0;
-		c = (corner != 0) ? 1: 0;
+		s1 = (side1) ? 1: 0;
+		s2 = (side2) ? 1: 0;
+		c = (corner) ? 1: 0;
 		Colors.Add(Color32.Lerp(Color.black, Color.white, (3-(s1+s2+c))/3));
 	}
 
@@ -150,12 +322,6 @@ public class ChunkScript : MonoBehaviour {
 		} else {
 			GenFaceCommon(tMud);
 		}
-
-		// Tsekkaa 8.6. muistiinpanot
-		// TODO: näihin BlockAt()
-		// Corner vertices of the top face in order 0,1,2,3
-		VertexAO (BlockAt(pos.x-1, pos.y, pos.z-1), BlockAt(pos.x,pos.y,pos.z), BlockAt (pos.x-1, pos.y, pos.z));
-		VertexAO (BlockAt(pos.x-1, pos.y, pos.z-1), BlockAt(pos.x,pos.y,pos.z), BlockAt (pos.x-1, pos.y, pos.z));
 	}
 
 	void GenFaceLeft(Vector3 pos) {
@@ -205,18 +371,54 @@ public class ChunkScript : MonoBehaviour {
 	
 	void GenBlock(int x, int y, int z, Vector2 texture1, Vector2 texture2) {
 		if (BlockAt(x,y,z) != 0) {
-			if (BlockAt(x, y+1, z) == 0)
+			if (BlockAt(x, y+1, z) == 0) {
 				GenFaceTop(new Vector3(x,y,z), BlockAt(x,y,z));
-			if (BlockAt(x, y-1, z) == 0)
+
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidNW), IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.BackNW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.BackNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.FrontN), IsNeighborSolid(x,y,z, Neighbor.FrontNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidNW), IsNeighborSolid(x,y,z, Neighbor.FrontN), IsNeighborSolid(x,y,z, Neighbor.FrontNW));
+			}
+			if (BlockAt(x, y-1, z) == 0) {
 				GenFaceBottom(new Vector3(x,y,z));
-			if (BlockAt(x+1, y, z) == 0)
+
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.FrontSW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.FrontNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
+			}
+			if (BlockAt(x+1, y, z) == 0) {
 				GenFaceRight(new Vector3(x,y,z));
-			if (BlockAt(x-1, y, z) == 0)
+
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontN), IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.FrontNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.BackNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.FrontSE));
+			}
+			if (BlockAt(x-1, y, z) == 0) {
 				GenFaceLeft(new Vector3(x,y,z));
-			if (BlockAt(x, y, z+1) == 0)
+
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidN), IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.FrontNW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.FrontSW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
+			}
+			if (BlockAt(x, y, z+1) == 0) {
 				GenFaceBack(new Vector3(x,y,z));
-			if (BlockAt(x, y, z-1) == 0)
+
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.BackNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.BackNW));
+			}
+			if (BlockAt(x, y, z-1) == 0) {
 				GenFaceFront(new Vector3(x,y,z));
+
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.FrontN), IsNeighborSolid(x,y,z, Neighbor.FrontNW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontN), IsNeighborSolid(x,y,z, Neighbor.FrontE), IsNeighborSolid(x,y,z, Neighbor.FrontNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontE), IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.FrontSE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.FrontSW));
+			}
 		}
 	}
 	
