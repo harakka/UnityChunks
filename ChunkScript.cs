@@ -326,10 +326,10 @@ public class ChunkScript : MonoBehaviour {
 
 	void GenFaceLeft(Vector3 pos) {
 		NewVertices.AddRange(new Vector3[] {
-			new Vector3 (pos.x  , pos.y  , pos.z+1 ),
-			new Vector3 (pos.x, pos.y, pos.z ),
-			new Vector3 (pos.x, pos.y-1 , pos.z ),
-			new Vector3 (pos.x, pos.y-1  , pos.z+1 )});
+			new Vector3 (pos.x, pos.y  , pos.z+1 ),
+			new Vector3 (pos.x  , pos.y  , pos.z ),
+			new Vector3 (pos.x, pos.y-1, pos.z ),
+			new Vector3 (pos.x, pos.y-1 , pos.z+1 )});
 			GenFaceCommon(tMud);
 	}
 
@@ -345,18 +345,18 @@ public class ChunkScript : MonoBehaviour {
 	void GenFaceRight(Vector3 pos) {
 		NewVertices.AddRange(new Vector3[] {
 			new Vector3 (pos.x + 1 , pos.y , pos.z ),
-			new Vector3 (pos.x + 1 , pos.y, pos.z+1 ),
-			new Vector3 (pos.x + 1 , pos.y-1  , pos.z+1 ),
-			new Vector3 (pos.x + 1 , pos.y-1 , pos.z )});
+			new Vector3 (pos.x + 1 , pos.y , pos.z+1 ),
+			new Vector3 (pos.x + 1 , pos.y-1, pos.z+1 ),
+			new Vector3 (pos.x + 1 , pos.y-1  , pos.z )});
 		GenFaceCommon(tMud);
 	}
 
 	void GenFaceBack(Vector3 pos) {
 		NewVertices.AddRange(new Vector3[] {
-			new Vector3 (pos.x + 1 , pos.y, pos.z+1 ),
-			new Vector3 (pos.x, pos.y, pos.z+1 ),
+			new Vector3 (pos.x+1, pos.y, pos.z+1 ),
+			new Vector3 (pos.x, pos.y  , pos.z+1 ),
 			new Vector3 (pos.x, pos.y-1  , pos.z+1 ),
-			new Vector3 (pos.x + 1 , pos.y-1  , pos.z+1 )});
+			new Vector3 (pos.x+1, pos.y-1, pos.z+1 )});
 		GenFaceCommon(tMud);
 	}
 
@@ -382,34 +382,34 @@ public class ChunkScript : MonoBehaviour {
 			if (BlockAt(x, y-1, z) == 0) {
 				GenFaceBottom(new Vector3(x,y,z));
 
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.FrontSW));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.FrontNE));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.BackSE));
 				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.FrontSW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.FrontSE));
 			}
 			if (BlockAt(x+1, y, z) == 0) {
 				GenFaceRight(new Vector3(x,y,z));
 
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontN), IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.FrontNE));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.BackNE));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.FrontSE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontE), IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.FrontNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.MidNE), IsNeighborSolid(x,y,z, Neighbor.BackNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidSE), IsNeighborSolid(x,y,z, Neighbor.FrontE), IsNeighborSolid(x,y,z, Neighbor.FrontSE));
 			}
 			if (BlockAt(x-1, y, z) == 0) {
 				GenFaceLeft(new Vector3(x,y,z));
 
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidN), IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.FrontNW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.MidNW), IsNeighborSolid(x,y,z, Neighbor.BackNW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidNW), IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.FrontNW));
 				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.FrontSW));
 				VertexAO (IsNeighborSolid(x,y,z, Neighbor.MidSW), IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
 			}
 			if (BlockAt(x, y, z+1) == 0) {
 				GenFaceBack(new Vector3(x,y,z));
 
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.BackSW));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
-				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.BackNE));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.BackNE));
 				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackN), IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.BackNW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackW), IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.BackSW));
+				VertexAO (IsNeighborSolid(x,y,z, Neighbor.BackS), IsNeighborSolid(x,y,z, Neighbor.BackE), IsNeighborSolid(x,y,z, Neighbor.BackSE));
 			}
 			if (BlockAt(x, y, z-1) == 0) {
 				GenFaceFront(new Vector3(x,y,z));
