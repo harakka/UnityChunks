@@ -28,6 +28,7 @@ public class ChunkScript : MonoBehaviour {
 	int quadCount;
 	MeshCollider col;
 	byte[,,] blocks;
+	PerlinNoiseGen perlin;
 
 	enum Neighbor {
 		FrontNW, FrontN, FrontNE, FrontE, FrontSE, FrontS, FrontSW, FrontW, FrontCenter,
@@ -205,7 +206,7 @@ public class ChunkScript : MonoBehaviour {
 			zOff = 1;
 			break;
 		default:
-			Debug.Log("The famous this should never happen line");
+			Debug.LogError("The famous this should never happen line");
 			break;
 		}
 
@@ -239,10 +240,11 @@ public class ChunkScript : MonoBehaviour {
 	}
 
 	void GenerateTerrainData() {
+		perlin = GetComponentInParent<PerlinNoiseGen>();
 		//Debug.Log("Chunk " + Position + " generating blocks");
 		for (int x = 0; x < blocks.GetLength(0); x++) {
 			for (int z = 0; z < blocks.GetLength(2); z++) {
-				var noise = Mathf.FloorToInt(Mathf.PerlinNoise((float)((x+Position.x)/Size.x), (float)(z+Position.y)/Size.z)*Size.y);
+				var noise = Mathf.FloorToInt(perlin.PerlinNoise((x+Position.x)/Size.x, (z+Position.y)/Size.z)*Size.y);
 				for (int y = 0; y < blocks.GetLength(1); y++) {
 					if (y > noise) blocks[x,y,z] = 0;
 					if (y == noise) blocks[x,y,z] = 1;
@@ -291,7 +293,7 @@ public class ChunkScript : MonoBehaviour {
 		s1 = (side1) ? 1: 0;
 		s2 = (side2) ? 1: 0;
 		c = (corner) ? 1: 0;
-		Colors.Add(Color32.Lerp(Color.black, Color.white, (3-(s1+s2+c))/3));
+		Colors.Add(Color32.Lerp(Color.grey*0.5f, Color.grey*1.5f, (3-(s1+s2+c))/3));
 	}
 
 	void GenFaceCommon(Vector2 tex) {
@@ -419,6 +421,21 @@ public class ChunkScript : MonoBehaviour {
 				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontE), IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.FrontSE));
 				VertexAO (IsNeighborSolid(x,y,z, Neighbor.FrontS), IsNeighborSolid(x,y,z, Neighbor.FrontW), IsNeighborSolid(x,y,z, Neighbor.FrontSW));
 			}
+
+			// Give a random brightness/darkness shade to the quad
+			/*var shadeAmount = Random.Range(-0.2f,0.2f);
+			var lastColors = Colors.GetRange(Colors.Count-4, 4);
+			Colors.RemoveRange(Colors.Count-4, 4);
+			foreach(Color32 c in lastColors) {
+				if (shadeAmount >= 0)
+					Colors.Add(Color32.Lerp(c, Color.white, shadeAmount));
+				else
+					Colors.Add(Color32.Lerp(c, Color.black, Mathf.Abs(shadeAmount)));
+
+			}*/
+			
+			
+
 		}
 	}
 	

@@ -6,6 +6,7 @@ public class ChunkManager : MonoBehaviour {
 	public GameObject ChunkPrefab;
 	public Vector3 ChunkSize = new Vector3(16,10,16);
 	public int WorldSize = 20;
+	public bool Dirty = false;
 
 	public Transform Player;
 	//public readonly Transform WorldCenter;
@@ -37,7 +38,16 @@ public class ChunkManager : MonoBehaviour {
 			} else {
 				r.enabled = true;
 			}
+
+			if (Dirty) {
+				foreach(ChunkScript s in GetComponentsInChildren<ChunkScript>()) {
+					s.Dirty = true;
+				}
+				Dirty = false;
+			}
 		}
+
+
 		//UpdateBounds();
 	}
 
