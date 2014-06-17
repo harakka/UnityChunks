@@ -81,21 +81,36 @@ public class FlatChunk : MonoBehaviour {
 	void GenFace(int x, int z) {
 		var tex = tGrass;
 
+		if (blocks[x+1, z+1] == blocks[x, z]) {
 		NewVertices.AddRange(new Vector3[] {
-			new Vector3 (x, blocks[x, z+1], z+1 ),
-			new Vector3 (x+1, blocks[x+1, z+1], z+1 ),
-			new Vector3 (x+1, blocks[x+1, z], z ),
-			new Vector3 (x, blocks[x, z], z )});
+				new Vector3 (x, blocks[x, z], z ),			// 0
+				new Vector3 (x, blocks[x, z+1], z+1 ),		// 1
+				new Vector3 (x+1, blocks[x+1, z+1], z+1 ),	// 2
+				new Vector3 (x, blocks[x, z], z ),			// 3
+				new Vector3 (x+1, blocks[x+1, z+1], z+1 ),	// 4
+				new Vector3 (x+1, blocks[x+1, z], z )});	// 5
+		} else {
+			NewVertices.AddRange(new Vector3[] {
+				new Vector3 (x, blocks[x, z+1], z+1 ),		// 0
+				new Vector3 (x+1, blocks[x+1, z+1], z+1 ),	// 1
+				new Vector3 (x+1, blocks[x+1, z], z ),		// 2
+				new Vector3 (x, blocks[x, z+1], z+1 ),		// 3
+				new Vector3 (x+1, blocks[x+1, z], z ),		// 4
+				new Vector3 (x, blocks[x, z], z )});		// 5
+		}
 
 		// Add faces for the vertices we just added
+		// Which way the quad gets split depends on elevations of different vertices
 		NewTriangles.AddRange(new int[]{
-			quadCount*4+0, quadCount*4+1, quadCount*4+2,
-			quadCount*4+0, quadCount*4+2, quadCount*4+3});
+			quadCount*6+0, quadCount*6+1, quadCount*6+2,
+			quadCount*6+3, quadCount*6+4, quadCount*6+5});
 		
 		// UV region coordinates
 		NewUv.AddRange(new Vector2[] {
 			new Vector2 (tUnit * tex.x, tUnit * tex.y + tUnit),
 			new Vector2 (tUnit * tex.x + tUnit, tUnit * tex.y + tUnit),
+			new Vector2 (tUnit * tex.x + tUnit, tUnit * tex.y),
+			new Vector2 (tUnit * tex.x, tUnit * tex.y + tUnit),
 			new Vector2 (tUnit * tex.x + tUnit, tUnit * tex.y),
 			new Vector2 (tUnit * tex.x, tUnit * tex.y)});
 		
