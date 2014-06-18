@@ -5,6 +5,7 @@ using System.Collections.Generic;
 /* Written using http://wiki.unity3d.com/index.php/ProceduralPrimitives and
  * http://studentgamedev.blogspot.fi/2013/08/unity-voxel-tutorial-part-1-generating.html
  * as references. */
+using System;
 
 public class FlatChunk : MonoBehaviour {
 
@@ -27,6 +28,18 @@ public class FlatChunk : MonoBehaviour {
 	MeshCollider col;
 	byte[,] blocks;
 	PerlinNoiseGen perlin;
+
+	int YAt(float x, float y) {
+		return YAt (Mathf.RoundToInt(x), Mathf.RoundToInt(y));
+	}
+
+	int YAt(int x, int z) {
+		try {
+			return blocks[x,z];
+		} catch (IndexOutOfRangeException e) {
+			return 0;
+		}
+	}
 
 	public void Init(Vector3 size, Vector2 position) {
 		//Debug.Log("Chunk " + Position + " initializing");
@@ -63,7 +76,7 @@ public class FlatChunk : MonoBehaviour {
 
 		mesh.triangles = NewTriangles.ToArray();
 		mesh.uv = NewUv.ToArray();
-		//mesh.colors32 = Colors.ToArray();
+		mesh.colors32 = Colors.ToArray();
 
 		mesh.Optimize ();
 		mesh.RecalculateNormals ();
@@ -75,12 +88,60 @@ public class FlatChunk : MonoBehaviour {
 		NewVertices.Clear();
 		NewTriangles.Clear();
 		NewUv.Clear();
-		//Colors.Clear();
+		Colors.Clear();
 	}
 
 	void GenFace(int x, int z) {
 		var tex = tGrass;
+		Vector3[] vertices;
 
+		if (YAt (x+1, z+1) == YAt (x, z)) {
+			vertices = new Vector3[] {
+				new Vector3 (x, YAt(x, z), z),			// 0
+				new Vector3 (x, YAt(x, z+1), z+1),		// 1
+				new Vector3 (x+1, YAt(x+1, z+1), z+1),	// 2
+				new Vector3 (x, YAt(x, z), z),			// 3
+				new Vector3 (x+1, YAt(x+1, z+1), z+1),	// 4
+				new Vector3 (x+1, YAt(x+1, z), z)};		// 5
+		} else {
+			vertices = new Vector3[] {
+				new Vector3 (x, YAt(x, z+1), z+1),		// 0
+				new Vector3 (x+1, YAt(x+1, z+1), z+1 ),	// 1
+				new Vector3 (x+1, YAt(x+1, z), z),		// 2
+				new Vector3 (x, YAt(x, z+1), z+1),		// 3
+				new Vector3 (x+1, YAt(x+1, z), z),		// 4
+				new Vector3 (x, YAt(x, z), z)};			// 5
+		}
+
+		NewVertices.AddRange(vertices);
+
+		// Ambient occlusion calculation for vertices, checking number of neighbours that are higher up than current vert
+		foreach (Vector3 v in vertices) {
+			// For each neighbor vertex higher than us, we increase the counter
+			int neighboringElevatedCount = 0;
+			if (YAt(v.x+1, v.z) > YAt(v.x, v.z))
+				neighboringElevatedCount+=1;
+			if (YAt(v.x-1, v.z) > YAt(v.x, v.z))
+				neighboringElevatedCount+=1;
+		    if (YAt(v.x, v.z+1) > YAt(v.x, v.z))
+				neighboringElevatedCount+=1;
+		    if (YAt(v.x, v.z-1) > YAt(v.x, v.z))
+				neighboringElevatedCount+=1;
+	
+			// And for each neighboring lower vertex, we decrease it, to balance things out
+			if (YAt(v.x+1, v.z) < YAt(v.x, v.z))
+				neighboringElevatedCount-=1;
+			if (YAt(v.x-1, v.z) < YAt(v.x, v.z))
+				neighboringElevatedCount-=1;
+			if (YAt(v.x, v.z+1) < YAt(v.x, v.z))
+				neighboringElevatedCount-=1;
+			if (YAt(v.x, v.z-1) < YAt(v.x, v.z))
+				neighboringElevatedCount-=1;
+
+			Colors.Add(Color32.Lerp(Color.grey*0.5f, Color.grey*1.5f, (4-neighboringElevatedCount)/4));
+		}
+
+		/*
 		if (blocks[x+1, z+1] == blocks[x, z]) {
 		NewVertices.AddRange(new Vector3[] {
 				new Vector3 (x, blocks[x, z], z ),			// 0
@@ -98,6 +159,7 @@ public class FlatChunk : MonoBehaviour {
 				new Vector3 (x+1, blocks[x+1, z], z ),		// 4
 				new Vector3 (x, blocks[x, z], z )});		// 5
 		}
+		*/
 
 		// Add faces for the vertices we just added
 		// Which way the quad gets split depends on elevations of different vertices
@@ -113,15 +175,18 @@ public class FlatChunk : MonoBehaviour {
 			new Vector2 (tUnit * tex.x, tUnit * tex.y + tUnit),
 			new Vector2 (tUnit * tex.x + tUnit, tUnit * tex.y),
 			new Vector2 (tUnit * tex.x, tUnit * tex.y)});
-		
+
+
+		// AO vertex colors
+
 		quadCount++;
 
 	}
 
 	void BuildMesh(){
 		//Debug.Log("Chunk " + Position + " generating blocks");
-		for (int x = 0; x < blocks.GetLength(0)-1; x++) {
-			for (int z = 0; z < blocks.GetLength(1)-1; z++) {
+		for (int x = 0; x <= blocks.GetLength(0)-1; x++) {
+			for (int z = 0; z <= blocks.GetLength(1)-1; z++) {
 				GenFace(x, z);
 			}
 		}
