@@ -93,76 +93,73 @@ public class FlatChunk : MonoBehaviour {
 
 	void GenFace(int x, int z) {
 		var tex = tGrass;
-		Vector3[] vertices;
+		Vector3[] face1, face2;
 
+		// Which way the quad gets split depends on elevations of different vertices
 		if (YAt (x+1, z+1) == YAt (x, z)) {
-			vertices = new Vector3[] {
+			face1 = new Vector3[] {
 				new Vector3 (x, YAt(x, z), z),			// 0
 				new Vector3 (x, YAt(x, z+1), z+1),		// 1
-				new Vector3 (x+1, YAt(x+1, z+1), z+1),	// 2
+				new Vector3 (x+1, YAt(x+1, z+1), z+1)};	// 2
+			face2 = new Vector3[] {
 				new Vector3 (x, YAt(x, z), z),			// 3
 				new Vector3 (x+1, YAt(x+1, z+1), z+1),	// 4
 				new Vector3 (x+1, YAt(x+1, z), z)};		// 5
 		} else {
-			vertices = new Vector3[] {
+			face1 = new Vector3[] {
 				new Vector3 (x, YAt(x, z+1), z+1),		// 0
 				new Vector3 (x+1, YAt(x+1, z+1), z+1 ),	// 1
-				new Vector3 (x+1, YAt(x+1, z), z),		// 2
+				new Vector3 (x+1, YAt(x+1, z), z)};		// 2
+			face2 = new Vector3[] {
 				new Vector3 (x, YAt(x, z+1), z+1),		// 3
 				new Vector3 (x+1, YAt(x+1, z), z),		// 4
 				new Vector3 (x, YAt(x, z), z)};			// 5
 		}
 
-		NewVertices.AddRange(vertices);
+		NewVertices.AddRange(face1);
+		NewVertices.AddRange(face2);
 
-		// Ambient occlusion calculation for vertices, checking number of neighbours that are higher up than current vert
-		foreach (Vector3 v in vertices) {
-			// For each neighbor vertex higher than us, we increase the counter
-			int neighboringElevatedCount = 0;
-			if (YAt(v.x+1, v.z) > YAt(v.x, v.z))
-				neighboringElevatedCount+=1;
-			if (YAt(v.x-1, v.z) > YAt(v.x, v.z))
-				neighboringElevatedCount+=1;
-		    if (YAt(v.x, v.z+1) > YAt(v.x, v.z))
-				neighboringElevatedCount+=1;
-		    if (YAt(v.x, v.z-1) > YAt(v.x, v.z))
-				neighboringElevatedCount+=1;
-	
-			// And for each neighboring lower vertex, we decrease it, to balance things out
-			if (YAt(v.x+1, v.z) < YAt(v.x, v.z))
-				neighboringElevatedCount-=1;
-			if (YAt(v.x-1, v.z) < YAt(v.x, v.z))
-				neighboringElevatedCount-=1;
-			if (YAt(v.x, v.z+1) < YAt(v.x, v.z))
-				neighboringElevatedCount-=1;
-			if (YAt(v.x, v.z-1) < YAt(v.x, v.z))
-				neighboringElevatedCount-=1;
+		Vector3[][] faces = new Vector3[2][];
+		faces[0] = face1;
+		faces[1] = face2;
 
-			Colors.Add(Color32.Lerp(Color.grey*0.5f, Color.grey*1.5f, (4-neighboringElevatedCount)/4));
+		foreach (Vector3[] face in faces) {
+			// If a face is not inclined, make it bright
+			if (face[0].y == face[1].y && face[0].y == face[2].y) {
+				foreach (Vector3 v in face) {
+					Colors.Add(Color.grey*1.5f);
+				}
+			// Otherwise brighten or darken depending on neigboring vertices' elevation
+			} else {
+				foreach (Vector3 v in face) {
+					int neighboringElevatedCount = 0;
+					
+					// For each neighbor vertex higher than us, we increase the counter
+					if (YAt(v.x+1, v.z) > YAt(v.x, v.z))
+						neighboringElevatedCount+=1;
+					if (YAt(v.x-1, v.z) > YAt(v.x, v.z))
+						neighboringElevatedCount+=1;
+					if (YAt(v.x, v.z+1) > YAt(v.x, v.z))
+						neighboringElevatedCount+=1;
+					if (YAt(v.x, v.z-1) > YAt(v.x, v.z))
+						neighboringElevatedCount+=1;
+					
+					// And for each neighboring lower vertex, we decrease it, to balance things out
+					if (YAt(v.x+1, v.z) < YAt(v.x, v.z))
+						neighboringElevatedCount-=1;
+					if (YAt(v.x-1, v.z) < YAt(v.x, v.z))
+						neighboringElevatedCount-=1;
+					if (YAt(v.x, v.z+1) < YAt(v.x, v.z))
+						neighboringElevatedCount-=1;
+					if (YAt(v.x, v.z-1) < YAt(v.x, v.z))
+						neighboringElevatedCount-=1;
+					
+					Colors.Add(Color32.Lerp(Color.grey*0.5f, Color.grey*1.5f, (4-neighboringElevatedCount)/4));
+				}
+			}
 		}
-
-		/*
-		if (blocks[x+1, z+1] == blocks[x, z]) {
-		NewVertices.AddRange(new Vector3[] {
-				new Vector3 (x, blocks[x, z], z ),			// 0
-				new Vector3 (x, blocks[x, z+1], z+1 ),		// 1
-				new Vector3 (x+1, blocks[x+1, z+1], z+1 ),	// 2
-				new Vector3 (x, blocks[x, z], z ),			// 3
-				new Vector3 (x+1, blocks[x+1, z+1], z+1 ),	// 4
-				new Vector3 (x+1, blocks[x+1, z], z )});	// 5
-		} else {
-			NewVertices.AddRange(new Vector3[] {
-				new Vector3 (x, blocks[x, z+1], z+1 ),		// 0
-				new Vector3 (x+1, blocks[x+1, z+1], z+1 ),	// 1
-				new Vector3 (x+1, blocks[x+1, z], z ),		// 2
-				new Vector3 (x, blocks[x, z+1], z+1 ),		// 3
-				new Vector3 (x+1, blocks[x+1, z], z ),		// 4
-				new Vector3 (x, blocks[x, z], z )});		// 5
-		}
-		*/
 
 		// Add faces for the vertices we just added
-		// Which way the quad gets split depends on elevations of different vertices
 		NewTriangles.AddRange(new int[]{
 			quadCount*6+0, quadCount*6+1, quadCount*6+2,
 			quadCount*6+3, quadCount*6+4, quadCount*6+5});
