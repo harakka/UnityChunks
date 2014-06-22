@@ -21,9 +21,9 @@ public class FlatChunk : MonoBehaviour {
 	List<Color32> Colors = new List<Color32>();
 	
 	Mesh mesh;
-	float tUnit = 0.125f;
-	Vector2 tGrass = new Vector2(0,7);
-	Vector2 tMud = new Vector2(1,7);
+	float tUnit = 0.5f;
+	Vector2 tGrass = new Vector2(0,1);
+	Vector2 tMud = new Vector2(1,1);
 	int quadCount;
 	MeshCollider col;
 	byte[,] blocks;
@@ -127,7 +127,7 @@ public class FlatChunk : MonoBehaviour {
 			// If a face is not inclined, make it bright
 			if (face[0].y == face[1].y && face[0].y == face[2].y) {
 				foreach (Vector3 v in face) {
-					Colors.Add(Color.grey*1.5f);
+					Colors.Add(Color.green*1.5f);
 				}
 			// Otherwise brighten or darken depending on neigboring vertices' elevation
 			} else {
@@ -154,7 +154,7 @@ public class FlatChunk : MonoBehaviour {
 					if (YAt(v.x, v.z-1) < YAt(v.x, v.z))
 						neighboringElevatedCount-=1;
 					
-					Colors.Add(Color32.Lerp(Color.grey*0.5f, Color.grey*1.5f, (4-neighboringElevatedCount)/4));
+					Colors.Add(Color32.Lerp(Color.green*0.5f, Color.green*1.5f, (4-neighboringElevatedCount)/4));
 				}
 			}
 		}
