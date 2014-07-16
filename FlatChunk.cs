@@ -5,21 +5,25 @@ using System.Collections.Generic;
 /* Written using http://wiki.unity3d.com/index.php/ProceduralPrimitives and
  * http://studentgamedev.blogspot.fi/2013/08/unity-voxel-tutorial-part-1-generating.html
  * as references. */
-using System;
 
 public class FlatChunk : MonoBehaviour {
 
 	public bool Dirty = true;
 
-	Vector3 Size;
-	Vector2 Position;
+	//Vector3 Size;
+	//Vector2 Position;
 
 	List<Vector3> NewVertices = new List<Vector3>();
     List<Vector2> NewUv = new List<Vector2>();
     List<int> NewTriangles = new List<int>();
 
 	List<Color32> Colors = new List<Color32>();
-	
+
+	FlatChunkManager manager;
+
+	Coord position;
+	Coord size;
+
 	Mesh mesh;
 	float tUnit = 0.5f;
 	Vector2 tGrass = new Vector2(0,1);
@@ -29,23 +33,28 @@ public class FlatChunk : MonoBehaviour {
 	byte[,] blocks;
 	PerlinNoiseGen perlin;
 
-	int YAt(float x, float y) {
-		return YAt (Mathf.RoundToInt(x), Mathf.RoundToInt(y));
+	Color32 colorBright = Color.green*1.5f;
+	Color32 colorDark = Color.green*0.5f;
+
+	public int YAt(float x, float z) {
+		return YAt(Mathf.RoundToInt(x), Mathf.RoundToInt(z));
 	}
 
-	int YAt(int x, int z) {
+	public int YAt(int x, int z) {
 		try {
 			return blocks[x,z];
-		} catch (IndexOutOfRangeException e) {
-			return 0;
+		} catch (System.IndexOutOfRangeException e) {
+			return manager.YAt(new Coord(position.X + x, position.Z + z));
+			//return 255;
 		}
 	}
 
-	public void Init(Vector3 size, Vector2 position) {
+	public void Init(Coord asize, Coord aposition) {
 		//Debug.Log("Chunk " + Position + " initializing");
-		Size = size;
-		Position = position;
-		blocks = new byte[(int)Size.x,(int)Size.z];
+		manager = GetComponentInParent<FlatChunkManager>();
+		size = asize;
+		position = aposition;
+		blocks = new byte[size.X,size.Z];
 		GenerateTerrainData();
 
 		mesh = new Mesh();
@@ -63,7 +72,7 @@ public class FlatChunk : MonoBehaviour {
 		//Debug.Log("Chunk " + Position + " generating blocks");
 		for (int x = 0; x < blocks.GetLength(0); x++) {
 			for (int z = 0; z < blocks.GetLength(1); z++) {
-				var noise = Mathf.FloorToInt(perlin.PerlinNoise((x+Position.x)/Size.x, (z+Position.y)/Size.z)*Size.y);
+				var noise = Mathf.FloorToInt(perlin.PerlinNoise((float)(x+position.X)/size.X, (float)(z+position.Z)/size.Z)*size.Z);
 				blocks[x,z] = (byte)noise;		//FIXME: ugly cast
 			}
 		}
@@ -94,6 +103,7 @@ public class FlatChunk : MonoBehaviour {
 	void GenFace(int x, int z) {
 		var tex = tGrass;
 		Vector3[] face1, face2;
+		Color colorVariance = Color.gray * Random.Range(-0.2f, 0.2f);
 
 		// Which way the quad gets split depends on elevations of different vertices
 		if (YAt (x+1, z+1) == YAt (x, z)) {
@@ -127,7 +137,7 @@ public class FlatChunk : MonoBehaviour {
 			// If a face is not inclined, make it bright
 			if (face[0].y == face[1].y && face[0].y == face[2].y) {
 				foreach (Vector3 v in face) {
-					Colors.Add(Color.green*1.5f);
+					Colors.Add(colorBright+colorVariance);
 				}
 			// Otherwise brighten or darken depending on neigboring vertices' elevation
 			} else {
@@ -154,7 +164,7 @@ public class FlatChunk : MonoBehaviour {
 					if (YAt(v.x, v.z-1) < YAt(v.x, v.z))
 						neighboringElevatedCount-=1;
 					
-					Colors.Add(Color32.Lerp(Color.green*0.5f, Color.green*1.5f, (4-neighboringElevatedCount)/4));
+					Colors.Add(Color32.Lerp(colorDark, colorBright, (4-neighboringElevatedCount)/4)+colorVariance);
 				}
 			}
 		}
@@ -190,7 +200,7 @@ public class FlatChunk : MonoBehaviour {
 	}
 		
 	// Update is called once per frame
-	void Update () {
+	void LateUpdate () {
 		if (renderer.enabled && Dirty) {
 			//Debug.Log("Chunk " + Position + " dirty, generating mesh");
 			Generate();

@@ -1,50 +1,76 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class FlatChunkManager : MonoBehaviour {
 
 	public GameObject ChunkPrefab;
-	public Vector3 ChunkSize = new Vector3(16,10,16);
-	public int WorldSize = 20;
-	public bool Dirty = false;
+	//public Vector3 ChunkSize = new Vector3(16,10,16);
+	public Coord ChunkSize = new Coord(100,100);
+	public int WorldSize = 5;
+	//public bool Dirty = false;
 
 	public Transform Player;
 	//public readonly Transform WorldCenter;
 
+	Dictionary<Coord, FlatChunk> chunks = new Dictionary<Coord, FlatChunk>();
 
-	void Awake () {
+	public int YAt(Coord target) {
+
+		if (target.X < 0 || target.Z < 0 || target.X >= WorldSize*100 || target.Z >= WorldSize*100) {
+			return 250;
+		}
+
+		/*int chunkX = target.X / ChunkSize.X;
+		int chunkZ = target.Z / ChunkSize.Z;*/
+		int chunkX = target.X - target.X % ChunkSize.X;
+		int chunkZ = target.Z - target.Z % ChunkSize.Z;
+		int blockX = target.X - chunkX;
+		int blockZ = target.Z - chunkZ;
+
+		FlatChunk chunk;
+		if (chunks.TryGetValue (new Coord (chunkX, chunkZ), out chunk)) {
+			return chunk.YAt (blockX, blockZ);
+		}
+		//Debug.LogError ("Coordinate lookup failure " + target);
+		return 0;
 	}
 
-	void Start() {
-		Player.transform.position = new Vector3(ChunkSize.x*WorldSize/2, ChunkSize.y, ChunkSize.z*WorldSize/2);
-
+	void Awake () {
 		for (int x = 0; x < WorldSize; x++) {
-			for (int y = 0; y < WorldSize; y++) {
-				GameObject prefab = Instantiate(ChunkPrefab, new Vector3(ChunkSize.x*x, 0, ChunkSize.z*y), Quaternion.identity) as GameObject;
+			for (int z = 0; z < WorldSize; z++) {
+				GameObject prefab = Instantiate(ChunkPrefab, new Vector3(ChunkSize.X*x, 0, ChunkSize.Z*z), Quaternion.identity) as GameObject;
 				prefab.transform.parent = transform;
 				var chunk = prefab.GetComponent<FlatChunk>();
-				chunk.Init(ChunkSize, new Vector2(ChunkSize.x*x,ChunkSize.z*y));
+				var chunkPos = new Coord(ChunkSize.X*x, ChunkSize.Z*z);
+				chunks.Add(chunkPos, chunk);
+				chunk.Init(ChunkSize, chunkPos);
 				//chunk.Generate();
 			}
 		}
+	}
+
+	void Start() {
+		Player.transform.position = new Vector3(ChunkSize.X*WorldSize/2, 15, ChunkSize.Z*WorldSize/2);
 	}
 	
 	void Update () {
 		Vector2 v1 = new Vector2(Player.position.x, Player.position.z);
 		foreach(Renderer r in GetComponentsInChildren<Renderer>()) {
 			Vector2 v2 = new Vector2(r.bounds.center.x, r.bounds.center.z);
-			if (Vector2.Distance(v1, v2) > ChunkSize.x*20) {
+			if (Vector2.Distance(v1, v2) > ChunkSize.X*20) {
 				r.enabled = false;
 			} else {
 				r.enabled = true;
 			}
 
+			/*
 			if (Dirty) {
 				foreach(FlatChunk s in GetComponentsInChildren<FlatChunk>()) {
 					s.Dirty = true;
 				}
 				Dirty = false;
 			}
+			*/
 		}
 
 
